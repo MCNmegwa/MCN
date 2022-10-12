@@ -1,0 +1,440 @@
+---
+title: "Google Data Analytics Capstone Project"
+author: "Miracle Nmegwa"
+date: '2022-06-13'
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+### Introduction 
+This Google data analytics capstone project is the final piece that seeks to test your ability as a data analyst using the phases of data analysis**(Ask,Prepare,Process,Analyze,Share **and **Act)** taught in the course. 
+
+The case study focus on cyclistic bike-share program featuring 5,824 bicycles that are geotracked and locked into a network of 692 stations across Chicago. They have 3 flexible plans which includes:**Single ride pass**, **Full-day passes** and **Annual memberships**. 
+
+As a Junior data Analyst working in the marketing analyst team at Cyclistic, I'm expected to conduct an analysis and bring recommendations that will help in converting casual riders to annual members.
+
+
+
+### Phase 1: Ask
+This involves identifying the business tasks, asking the right questions and considering the stakeholders involved.
+
+#### The business task involves 
+Analyzing the different ways members and casual riders use bikes differently
+
+#### Asking the right questions 
+Questions that will guide the future marketing program:
+
+1. How do annual members and casual riders use Cyclistic bikes differently?
+2. Why would casual riders buy Cyclistic annual memberships?
+3. How can Cyclistic use digital media to influence casual riders to become members?
+
+#### Key Stakeholders involved
+1. The director of marketing and my manager **Lily Moreno** responsible for the development of campaigns and initiatives to promote the bike-share program through emails, social media or other channels.
+
+2. **The Cyclistic executive team** that will decide whether to approve the recommended marketing program.
+
+
+### Phase 2: Prepare
+* Data was gotten from [Divvy bikes](https://divvy-tripdata.s3.amazonaws.com/index.html) 
+* This data includes 12 months file in .csv format from **June 2021 to May 2022**
+* It is credible, free from bias and it is from a reliable source.
+* It is an open source data.
+* Data has been made available by Motivate International Inc. under this [licence](https://ride.divvybikes.com/data-licence-agreement). 
+
+**Setting up my work environment and loading required R packages**
+```{r Loading required R packages, warning=FALSE, paged.print=TRUE}
+library(tidyverse) #data analysis
+library(readr) #data reading 
+library(ggplot2) #data visualization
+library(lubridate) #date and time manipulation
+library(skimr) #data structure
+library(janitor) #data cleaning
+library(stringr) #data manipulation
+library(dplyr) #data manipulation
+```
+
+**Data Collection**
+
+Uploading the 12 months dataset.
+```{r loading the dataest}
+df_jun_2021 <- read.csv('202106-divvy-tripdata.csv')
+df_jul_2021 <- read.csv('202107-divvy-tripdata.csv')
+df_aug_2021 <- read.csv('202108-divvy-tripdata.csv')
+df_sep_2021 <- read.csv('202109-divvy-tripdata.csv')
+df_oct_2021 <- read.csv('202110-divvy-tripdata.csv')
+df_nov_2021 <- read.csv('202111-divvy-tripdata.csv')
+df_dec_2021 <- read.csv('202112-divvy-tripdata.csv')
+df_jan_2022 <- read.csv('202201-divvy-tripdata.csv')
+df_feb_2022 <- read.csv('202202-divvy-tripdata.csv')
+df_mar_2022 <- read.csv('202203-divvy-tripdata.csv')
+df_apr_2022 <- read.csv('202204-divvy-tripdata.csv')
+df_may_2022 <- read.csv('202205-divvy-tripdata.csv')
+```
+
+**Checking for similarities in column names**
+```{r Checking for similarities in dataset}
+glimpse(df_jun_2021)
+glimpse(df_jul_2021)
+glimpse(df_aug_2021)
+glimpse(df_sep_2021)
+glimpse(df_oct_2021)
+glimpse(df_nov_2021)
+glimpse(df_dec_2021)
+glimpse(df_jan_2022)
+glimpse(df_feb_2022)
+glimpse(df_mar_2022)
+glimpse(df_apr_2022)
+glimpse(df_may_2022)
+```
+
+*During inspection of column names, i discovered that some of my datasets had 2 of its columns(started_at and ended_at) had their format in "chr" instead of "datetime"(dttm). I will have to coovert those columns to "dttm" so as to maintain consistency*
+```{r changing (started_at,ended_at) from "chr" to "dttm"}
+df_jun_2021 <- mutate(df_jun_2021, started_at = as_datetime(started_at),
+                      ended_at = as_datetime(ended_at))
+df_jul_2021 <- mutate(df_jul_2021, started_at = as_datetime(started_at),
+                      ended_at = as_datetime(ended_at))
+df_aug_2021 <- mutate(df_aug_2021, started_at = as_datetime(started_at),
+                      ended_at = as_datetime(ended_at))
+df_sep_2021 <- mutate(df_sep_2021, started_at = as_datetime(started_at),
+                      ended_at = as_datetime(ended_at))
+df_oct_2021 <- mutate(df_oct_2021, started_at = as_datetime(started_at),
+                      ended_at = as_datetime(ended_at))
+df_nov_2021 <- mutate(df_nov_2021, started_at = as_datetime(started_at),
+                      ended_at = as_datetime(ended_at))
+df_dec_2021 <- mutate(df_dec_2021, started_at = as_datetime(started_at),
+                      ended_at = as_datetime(ended_at))
+df_jan_2022 <- mutate(df_jan_2022, started_at = as_datetime(started_at),
+                      ended_at = as_datetime(ended_at))
+df_feb_2022 <- mutate(df_feb_2022, started_at = as_datetime(started_at),
+                      ended_at = as_datetime(ended_at))
+df_mar_2022 <- mutate(df_mar_2022, started_at = as_datetime(started_at),
+                      ended_at = as_datetime(ended_at))
+df_apr_2022 <- mutate(df_apr_2022, started_at = as_datetime(started_at),
+                      ended_at = as_datetime(ended_at))
+df_may_2022 <- mutate(df_may_2022, started_at = as_datetime(started_at),
+                      ended_at = as_datetime(ended_at))
+```
+
+**Combining the 12 months datasets into one dataframe**
+```{r joining the rows together}
+all_rides <- bind_rows(df_jun_2021, df_jul_2021, df_aug_2021,
+                               df_sep_2021, df_oct_2021, df_nov_2021,
+                               df_dec_2021, df_jan_2022, df_feb_2022,
+                               df_mar_2022, df_apr_2022, df_may_2022)
+```
+
+**Checking the new dataset**
+```{r inspecting the dataset}
+colnames(all_rides)
+dim(all_rides)
+nrow(all_rides)
+str(all_rides)
+summary(all_rides)
+head(all_rides, 5)
+skim_without_charts(all_rides)
+```
+**Observation**
+
+* The dataset has 5860776 rows and 13 Columns
+* There are two types of users: members and casual users
+
+**Ability to address Business Task**
+
+The data will be able to answer the business task by analyzing the different ways members and casual riders use bikes differently.
+
+**Problems with the data**
+
+* Some of the columns has missing value that might affect our overall analysis.
+* Some of the columns needs to be renamed for easier understanding.
+
+
+
+### Phase 3: Process
+This is where we clean, manipulate and transform our data so as to prepare the data for analysis.
+
+**Choice of tools for the analysis**
+R Studio will be used for the analysis and visualization of the data because of the large dataset.
+
+**Renaming columns for easier identification**
+```{r renaming columns}
+all_rides <- all_rides %>%
+  rename(bike_type = rideable_type,
+         membership_type = member_casual)
+```
+
+**Adding columns for ride_length**
+```{r column for ride_length}
+all_rides$ride_length <- difftime(all_rides$ended_at,
+                                  all_rides$started_at)
+```
+
+**Adding columns for date, day, day_of_week, month and year**
+```{r adding columns date, day, day_of_week, month, year and hour}
+all_rides$date <- as.Date(all_rides$started_at)
+all_rides$day <- format(as.Date(all_rides$date), "%d")
+all_rides$day_of_week <- format(as.Date(all_rides$date), "%A")
+all_rides$month <- format(as.Date(all_rides$date), "%m")
+all_rides$year <- format(as.Date(all_rides$date), "%Y")
+```
+
+**Checking the dataframe**
+```{r inspecting the dataframe}
+skim_without_charts(all_rides)
+```
+
+**Observations**
+
+* Minimum value of ride is -3482secs which makes it invalid.
+* Maximum value of ride_length is 3356649secs(932.402hours)which makes it an outlier. 
+* ride_length needs to be converted to numeric to perform calculations in it.
+
+**Converting ride_length to numeric**
+```{r converting ride_length to numeric}
+all_rides$ride_length <- as.numeric(all_rides$ride_length)
+```
+
+**Removing Bad data**
+
+* According to [Divvy data's website](https://ride.divvybikes.com/system-data), any ride_length below 60secs is potentially false starts or users trying to re-dock a bike so we have to remove it.
+* We also have to remove ride_lengths above 24hours(86400secs)because they are outliers.
+* Non-availaible(NA's)rides in end_lat and end_lng are considered invalid because it doesn't show where the rides ended.
+```{r removing bad data for ride_length} 
+all_rides2 <- all_rides %>%
+        filter(!(ride_length<60)) %>%
+        filter(!(ride_length>86400)) #removing bad data for ride_length
+```
+```{r replacing blank and space}
+all_rides2$start_station_name[all_rides2$start_station_name == ""]<- NA #replacing empty cells in start station name with NA
+```
+```{r removing bad data for end_lat and end_lng}
+all_rides2 <- all_rides2 %>%
+  filter(!(is.na(end_lat)))%>%
+  filter(!(is.na(end_lng))) #removing bad data for NA data in end_lat and end_lng
+```
+
+**Checking the new dataframe**
+```{r inspecting the new dataframe}
+skim_without_charts(all_rides2)
+```
+
+**Data Integrity**
+
+The data has been cleaned, so its now accurate and complete as outliers and bad data has all been removed.
+
+**Documenting the cleaning process**
+
+The cleaning process has been documented using Rstudio and saved as an RMarkdown file.
+
+
+
+### Phase 4: Analysis and Visualization of the data
+
+**Descriptive analysis on ride_length**
+```{r analysis on ride_length}
+all_rides2 %>%
+    summarise(mean = mean(ride_length), maximum = max(ride_length),
+              minimum = min(ride_length), median = median(ride_length))
+```
+**Insights**
+
+* The maximum ride length is 86391secs(24hrs).
+* The minimum ride length is 60secs(1min).
+* The average ride length is 1113.934secs(19mins).
+
+**Descriptive analysis on ride_length and membership_type**
+```{r analysis on ride_length and membership_type}
+aggregate(all_rides2$ride_length ~ all_rides2$membership_type, FUN = mean)
+aggregate(all_rides2$ride_length ~ all_rides2$membership_type, FUN = max)
+aggregate(all_rides2$ride_length ~ all_rides2$membership_type, FUN = min)
+```
+**Insights**
+
+* The average ride length is 1544secs(26mins)for casual riders  and 779secs(13mins)for member riders.
+* The Maximum ride length is 86391secs(24hours) for casual riders and 86128secs(24hours) for member riders.
+* The minimum ride length is 60secs(1min)for both casual and member riders
+
+**Descriptive analysis on the total no. of rides**
+```{r analysis on total no. of rides}
+all_rides2 %>%
+  group_by(membership_type)%>%
+  summarise(number_of_rides = n())
+```
+**Insights**
+
+* The total number of rides is *2481631* for casual riders and *3192283* for member riders.
+
+**Descriptive analysis on the no. of rides for membership_type by day_of_week**
+```{r mutate day_of_week}
+all_rides2 <- all_rides2 %>%
+  mutate(day_of_week = factor(day_of_week, levels = c("Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat")))
+```
+```{r analysis on ride_length on membership_type by day_of_week}
+all_rides2 %>%
+  group_by(membership_type, day_of_week)%>%
+  summarise(number_of_ride = n()) %>%
+  arrange(membership_type)
+```
+
+**Calculating the average ride_length by membership_type according to day_of_week** 
+```{r average ride_length according to weekdays}
+aggregate(all_rides2$ride_length ~ all_rides2$membership_type + all_rides2$day_of_week,
+          FUN = mean)
+```
+
+**Calculating the total no.of rides by different membership_type according to months**
+```{r mutate months in orderly manner }
+all_rides2 <- all_rides2 %>%
+  mutate(month = factor(month, levels = c("Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec", "Jan", "Feb", "Mar", "Apr", "May")))
+```
+```{r total no. of rides}
+all_rides2 %>%
+  group_by(membership_type, month) %>%
+  summarise(number_of_rides = n()) %>%
+  arrange(membership_type)
+```
+
+**Getting the total no. of rides based on different bike_type**
+```{r total no. of different bike_type}
+table(all_rides2$bike_type)
+```
+
+**Getting the Top 5 starting stations for casual riders**
+```{r}
+all_rides2 %>%
+  filter(!(is.na(start_station_name)))%>%
+  filter(membership_type == "casual")%>%
+  group_by(start_station_name)%>%
+  summarise(number_of_rides = n())%>%
+  arrange(-number_of_rides)%>%
+  top_n(5)
+```
+
+**Getting the Top 5 starting stations for member riders**
+```{r top 5 member starting stations}
+all_rides2 %>%
+  filter(!(is.na(start_station_name)))%>%
+  filter(membership_type == "member")%>%
+  group_by(start_station_name)%>%
+  summarise(number_of_rides = n())%>%
+  arrange(-number_of_rides)%>%
+  top_n(5)
+```
+
+###Visualization
+
+**Visualizing the total no. of different membership_types**
+```{r visualzing the different membership_types}
+ggplot(data = all_rides2)+
+   geom_bar(mapping = aes(x=membership_type, fill = membership_type))+
+   labs(title = "Member and Casual Membership Count")
+```
+
+**Visualizing the different bike types used by different membership_type **
+```{r different bikes used by different members} 
+ggplot(data = all_rides2)+
+  geom_bar(mapping = aes(x=bike_type, fill = bike_type))+
+  facet_wrap(~membership_type)+
+  labs(title = "Member and Casual Membership Count based on Bike Type")
+```
+
+**Visualizing the total number of rides by weekdays**
+```{r visualization}
+all_rides2 %>%
+  group_by(membership_type, day_of_week)%>%
+  summarise(number_of_rides = n())%>%
+  ggplot(aes(x=day_of_week, y=number_of_rides, fill = membership_type))+
+  geom_col(position = "dodge") +
+  labs(title = "Membership Rides by Weekdays")
+```
+
+**Visualizing the total number of rides by Months**
+```{r visualization by months}
+all_rides2 %>%
+  group_by(membership_type, month) %>%
+  summarise(number_of_rides = n()) %>%
+  ggplot(aes(x=month, y=number_of_rides, group=membership_type, colour=membership_type))+
+  geom_line(size = 1)+ geom_point(size = 2) +
+  labs(title = "Membership Rides by Months")
+```
+
+**Visualizing the average ride length for each user by weekday**
+```{r}
+all_rides2 %>%
+  group_by(membership_type, day_of_week) %>%
+  summarise(average_ride_length = mean(ride_length)) %>%
+  ggplot(aes(x=day_of_week, y=average_ride_length, fill=membership_type))+
+  geom_col(position = "dodge") +
+  labs(title = "Average ride length by membership type")
+```
+
+**Visualizing the top 5 starting station for Casual riders**
+```{r top 5 starting stations}
+all_rides2 %>%
+  filter(!(is.na(start_station_name)))%>%
+  filter(membership_type == "casual")%>%
+  group_by(start_station_name)%>%
+  summarise(number_of_rides = n())%>%
+  arrange(-number_of_rides)%>%
+  top_n(5) %>%
+  mutate(start_station_name = fct_reorder(start_station_name, number_of_rides))%>%
+  ggplot(mapping = aes(x=start_station_name, y=number_of_rides, fill=number_of_rides))+
+  geom_bar(stat = "identity")+ coord_flip() +
+  labs(title = "Top 5 Starting Stations for Casual Riders")
+```
+
+**Visualizing the top 5 starting stations for members**
+```{r top 5 starting starting stations for members}
+all_rides2 %>%
+  filter(!(is.na(start_station_name)))%>%
+  filter(membership_type == "member")%>%
+  group_by(start_station_name)%>%
+  summarise(number_of_rides = n())%>%
+  arrange(-number_of_rides)%>%
+  top_n(5) %>%
+  mutate(start_station_name = fct_reorder(start_station_name, number_of_rides))%>%
+  ggplot(mapping = aes(x=start_station_name, y=number_of_rides, fill=number_of_rides))+
+  geom_bar(stat = "identity")+ coord_flip()
+  labs(title = "Top 5 Starting Stations for Member Riders")
+```
+
+
+
+### Phase 5: Share
+
+* The Rmarkdown file where the data was cleaned and analyzed will be shared with analytical team.
+* Lily Moreno will be presented with the result and findings from our analysis using Tableau's Dashboard.
+* A presentation detailing both the conclusions and recommendations will be given to the executive team using     slides.
+
+### Phase 6: Act
+
+**Conclusions**
+
+* The number of Member riders is higher than that of casual riders.
+
+* Both Casual and member riders prefer making use of the classic bike.
+
+* Member riders don't make use of the docked bikes.
+
+* Casual riders have the most rides in the month of July while member riders have theirs in the month of September
+
+* The casual riders have the most ride lengths when compared with that of the member riders.
+
+* Casual riders ride lengths are highest during the weekends while member riders ride lengths are evenly distributed throughout the weekdays.
+
+* Casual riders total no. of rides are highest during the weekends while member riders total no. of rides are significantly higher during the weekdays.
+
+* The Top 5 starting station for the Casual riders is different from that of the member riders.
+
+
+**Recommendations**
+
+* Discount offers should be done during the weekends at the Top 5 starting stations of Casual riders.
+
+* More Classic bikes should be provided at the starting stations of casual riders.
+
+* Promotional activities with benefits of annual membership at a subsidized rate should be targeted at Casual riders during the months of June, July and August
+
+* Since Casual riders make use of bikes on weekends the most, there could be a special weekend membership plan for them.
